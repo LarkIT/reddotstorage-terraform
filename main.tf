@@ -98,7 +98,7 @@ module "stage_railsapp" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
   instance_type        = "t2.small"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
   bootstrap            = "${module.bootstrap.railsapp_cloutinit}"
@@ -106,7 +106,7 @@ module "stage_railsapp" {
 
 #module "stage_db" {
 module "db" {
-  source                 = "git::https://github.com/terraform-aws-modules/terraform-aws-rds.git"
+  source                 = "git::https://github.com/terraform-aws-modules/terraform-aws-rds.git?ref=v1.0.3"
   identifier             = "stage"
   engine                 = "postgres"
   engine_version         = "9.6.2"
@@ -116,7 +116,7 @@ module "db" {
   username               = "dbadmin"
   password               = "YourPwdShouldBeLongAndSecure!"
   port                   = "5432"
-  vpc_security_group_ids = [ "${module.security_groups.general_id}" ]
+  vpc_security_group_ids = [ "${module.security_groups.general_id}", "${module.security_groups.proddb_id}" ]
   maintenance_window     = "Mon:00:00-Mon:03:00"
   backup_window          = "03:00-06:00"
   subnet_ids             = [ "${module.vpc.a-db}", "${module.vpc.b-db}" ]
