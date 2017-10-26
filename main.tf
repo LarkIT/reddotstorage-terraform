@@ -3,6 +3,25 @@ provider "aws" {
   profile = "${var.profile}"
 }
 
+#terraform {
+#  backend "s3" {
+#    bucket  = "red-tfstate"
+#    key     = "network/terraform.tfstate"
+#    profile = "red"
+#    region  = "us-west-2"
+#  }
+#}
+
+#data "terraform_remote_state" "remote_tfstate" {
+#  backend = "s3"
+#  config {
+#    bucket  = "red-tfstate"
+#    key     = "network/terraform.tfstate"
+#    profile = "red"
+#    region  = "us-west-2"
+#  }
+#}
+
 module "vpc" {
   source            = "git::https://nfosdick@bitbucket.org/larkit/vpc.git"
   profile           = "${var.profile}"
@@ -13,10 +32,11 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source      = "git::https://nfosdick@bitbucket.org/larkit/security_groups.git"
-  host_prefix = "${var.host_prefix}"
-  vpc_id      = "${module.vpc.vpc_id}"
-  cidr        = "${module.vpc.cidr}"
+  source              = "git::https://nfosdick@bitbucket.org/larkit/security_groups.git"
+  host_prefix         = "${var.host_prefix}"
+  vpc_id              = "${module.vpc.vpc_id}"
+  cidr                = "${module.vpc.cidr}"
+  infra_services_cidr = "${module.vpc.dmz_subnet_cidr}"
 }
 
 module "dns" {
@@ -27,14 +47,21 @@ module "dns" {
   domain_name_servers  = "${cidrhost("${module.vpc.cidr}", 2)}"
 }
 
+module "gitlab_s3_backups" {
+  source      = "git::https://nfosdick@bitbucket.org/larkit/s3.git"
+  bucket_name = "${var.host_prefix}-gitlab-s3-backups"
+}
+
 module "policy" {
-  source = "git::https://nfosdick@bitbucket.org/larkit/policy.git"
+  source     = "git::https://nfosdick@bitbucket.org/larkit/policy.git"
+  bucket_arn = "${module.gitlab_s3_backups.bucket_arn}"
 }
 
 module "iam_role" {
   source                = "git::https://nfosdick@bitbucket.org/larkit/iam_role.git"
   cloudwatch_policy_arn = "${module.policy.cloudwatch_policy_arn}"
   ec2_admin_policy_arn  = "${module.policy.ec2_admin_policy_arn}"
+  gitlab_policy_arn     = "${module.policy.gitlab_policy_arn}"
 }
 
 module "bootstrap" {
@@ -98,14 +125,13 @@ module "stage_railsapp" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
   instance_type        = "t2.small"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
   bootstrap            = "${module.bootstrap.railsapp_cloutinit}"
 }
 
-#module "stage_db" {
-module "db" {
+module "stage_db" {
   source                 = "git::https://github.com/terraform-aws-modules/terraform-aws-rds.git?ref=v1.0.3"
   identifier             = "stage"
   engine                 = "postgres"
@@ -129,16 +155,24 @@ module "db" {
 }
 
 module "stage_lb" {
-  source          = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
-  environment     = "staging"
-  host_prefix     = "${module.vpc.host_prefix}"
-  hostnames        = "${module.stage_railsapp.hostname_id}"
-  security_groups = [ "${module.security_groups.general_id}" ]
-  vpc_id          = "${module.vpc.vpc_id}"
-  subnets         = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
+  environment          = "staging"
+  host_prefix          = "${module.vpc.host_prefix}"
+  hostnames            = "${module.stage_railsapp.hostname_id}"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.app-lb_id}" ]
+  vpc_id               = "${module.vpc.vpc_id}"
+  subnets              = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
+  app_ssl_enable       = "${var.app_ssl_enable}"
+#  app_ssl_domain       = "staging.${var.external_domain_name}"
+  app_ssl_domain       = "staging.reddotstorage.com"
+  external_domain_name = "${var.external_domain_name}"
 }
 
-
+resource "aws_alb_target_group_attachment" "stageapp-01-stageapp-https" {
+  count            = "${var.app_ssl_enable}"
+  target_group_arn = "${module.stage_lb.app-https_arn}"
+  target_id        = "${module.stage_railsapp.hostname_id}"
+}
 
 
 

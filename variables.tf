@@ -21,3 +21,11 @@ variable "host_prefix" {
 variable "internal_domain_name" {
   default = "red.lan"
 }
+
+variable "external_domain_name" {
+  default = "aws.reddotstorage.com"
+}
+
+variable "app_ssl_enable" {
+  default = true
+}
