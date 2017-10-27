@@ -134,7 +134,7 @@ module "stage_railsapp" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
   instance_type        = "t2.small"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}", "${module.security_groups.prodapp_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
   bootstrap            = "${module.bootstrap.railsapp_cloutinit}"
@@ -156,7 +156,7 @@ module "stage_db" {
   username               = "dbadmin"
   password               = "YourPwdShouldBeLongAndSecure!"
   port                   = "5432"
-  vpc_security_group_ids = [ "${module.security_groups.general_id}", "${module.security_groups.proddb_id}" ]
+  vpc_security_group_ids = [ "${module.security_groups.general_id}", "${module.security_groups.stagedb_id}" ]
   maintenance_window     = "Mon:00:00-Mon:03:00"
   backup_window          = "03:00-06:00"
   subnet_ids             = [ "${module.vpc.a-db}", "${module.vpc.b-db}" ]
