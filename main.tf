@@ -70,6 +70,11 @@ module "bootstrap" {
   host_prefix          = "${module.vpc.host_prefix}"
 }
 
+###############################
+#
+# Core Infrastructure Servers
+#
+###############################
 module "foreman" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
   hostname             = "foreman-01"
@@ -115,7 +120,11 @@ module "pulp" {
   bootstrap            = "${module.bootstrap.pulp_cloutinit}"
 }
 
-
+###############################
+#
+# Stage Application Server
+#
+###############################
 module "stage_railsapp" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
   hostname             = "stageapp-01"
@@ -125,12 +134,17 @@ module "stage_railsapp" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
   instance_type        = "t2.small"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
   bootstrap            = "${module.bootstrap.railsapp_cloutinit}"
 }
 
+###############################
+#
+# Stage Database
+#
+###############################
 module "stage_db" {
   source                 = "git::https://github.com/terraform-aws-modules/terraform-aws-rds.git?ref=v1.0.3"
   identifier             = "stage"
@@ -154,6 +168,11 @@ module "stage_db" {
   }
 }
 
+###############################
+#
+# Load Balancer Config
+#
+###############################
 module "stage_lb" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
   environment          = "staging"
@@ -168,6 +187,11 @@ module "stage_lb" {
   external_domain_name = "${var.external_domain_name}"
 }
 
+###############################
+#
+# Attach Nodes to LB
+#
+###############################
 resource "aws_alb_target_group_attachment" "stageapp-01-stageapp-https" {
   count            = "${var.app_ssl_enable}"
   target_group_arn = "${module.stage_lb.app-https_arn}"
