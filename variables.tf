@@ -9,6 +9,11 @@ variable "region" {
     default = "us-west-2"
 }
 
+variable "availability_zone" {
+    description = "EC2 availability zone for the VPC"
+    default     = "a"
+}
+
 variable "environment" {
   description = "EC2 Region for the VPC"
   default     = "production"

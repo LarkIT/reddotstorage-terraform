@@ -3,24 +3,24 @@ provider "aws" {
   profile = "${var.profile}"
 }
 
-#terraform {
-#  backend "s3" {
-#    bucket  = "red-tfstate"
-#    key     = "network/terraform.tfstate"
-#    profile = "red"
-#    region  = "us-west-2"
-#  }
-#}
+terraform {
+  backend "s3" {
+    bucket  = "red-tfstate"
+    key     = "network/terraform.tfstate"
+    profile = "red"
+    region  = "us-west-2"
+  }
+}
 
-#data "terraform_remote_state" "remote_tfstate" {
-#  backend = "s3"
-#  config {
-#    bucket  = "red-tfstate"
-#    key     = "network/terraform.tfstate"
-#    profile = "red"
-#    region  = "us-west-2"
-#  }
-#}
+data "terraform_remote_state" "remote_tfstate" {
+  backend = "s3"
+  config {
+    bucket  = "red-tfstate"
+    key     = "network/terraform.tfstate"
+    profile = "red"
+    region  = "us-west-2"
+  }
+}
 
 module "vpc" {
   source            = "git::https://nfosdick@bitbucket.org/larkit/vpc.git"
@@ -28,6 +28,7 @@ module "vpc" {
   host_prefix       = "${var.host_prefix}"
   environment       = "${var.environment}"
   region            = "${var.region}"
+#  availability_zone = "${var.region}${var.availability_zone}"
   availability_zone = "a"
 }
 
@@ -64,17 +65,33 @@ module "iam_role" {
   gitlab_policy_arn     = "${module.policy.gitlab_policy_arn}"
 }
 
-module "bootstrap" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/bootstrap.git"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  host_prefix          = "${module.vpc.host_prefix}"
-}
+#module "bootstrap" {
+#  source               = "git::https://nfosdick@bitbucket.org/larkit/bootstrap.git"
+#  internal_domain_name = "${module.dns.internal_domain_name}"
+#  host_prefix          = "${module.vpc.host_prefix}"
+#}
 
 ###############################
 #
 # Core Infrastructure Servers
 #
 ###############################
+module "jump" {
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  hostname             = "jump-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-dmz}"
+  enable_aws_eip       = true
+  instance_type        = "t2.micro"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  route53_external_id  = "${module.dns.route53_external_id}"
+#  bootstrap            = "${module.bootstrap.base_cloutinit}"
+}
+
 module "foreman" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
   hostname             = "foreman-01"
@@ -83,11 +100,12 @@ module "foreman" {
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
+  #subnet_id            = "${module.vpc.a-shared}"
   instance_type        = "t2.medium"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.foreman_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
-  bootstrap            = "${module.bootstrap.foreman_cloutinit}"
+#  bootstrap            = "${module.bootstrap.foreman_cloutinit}"
 }
 
 module "gitlab" {
@@ -102,22 +120,49 @@ module "gitlab" {
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
-  bootstrap            = "${module.bootstrap.gitlab_cloutinit}"
+#  bootstrap            = "${module.bootstrap.gitlab_cloutinit}"
 }
+
+#resource "aws_ebs_volume" "pulp" {
+#    availability_zone = "${var.region}${var.availability_zone}"
+#    size              = 100
+#    tags {
+#        Name = "Pulp Volume"
+#    }
+#}
 
 module "pulp" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  role                 = "pulp"
   hostname             = "pulp-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-dmz}"
+  subnet_id            = "${module.vpc.a-shared}"
+  #subnet_id            = "${module.vpc.a-dmz}"
   instance_type        = "t2.medium"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
-  bootstrap            = "${module.bootstrap.pulp_cloutinit}"
+  enable_ebs_volume    = true
+  ebs_volume_size      = 100
+#  bootstrap            = "${module.bootstrap.pulp_cloutinit}"
+}
+
+module "vpn" {
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  role                 = "vpn"
+  hostname             = "vpn-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-dmz}"
+  instance_type        = "t2.micro"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  route53_external_id  = "${module.dns.route53_external_id}"
 }
 
 ###############################
@@ -133,11 +178,12 @@ module "stage_railsapp" {
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
+  enable_aws_eip       = true
   instance_type        = "t2.small"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
-  bootstrap            = "${module.bootstrap.railsapp_cloutinit}"
+#  bootstrap            = "${module.bootstrap.railsapp_cloutinit}"
 }
 
 ###############################
