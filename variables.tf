@@ -34,3 +34,7 @@ variable "external_domain_name" {
 variable "app_ssl_enable" {
   default = true
 }
+
+variable "prod_db_password" {
+  description = "Production database password."
+}

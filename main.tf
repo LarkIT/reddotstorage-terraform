@@ -100,6 +100,7 @@ module "foreman" {
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
+  enable_aws_eip       = true
   #subnet_id            = "${module.vpc.a-shared}"
   instance_type        = "t2.medium"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.foreman_id}" ]
@@ -159,6 +160,7 @@ module "vpn" {
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
+  enable_aws_eip       = true
   instance_type        = "t2.micro"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
@@ -214,6 +216,28 @@ module "stage_db" {
   }
 }
 
+module "prod_db" {
+  source                 = "git::https://github.com/terraform-aws-modules/terraform-aws-rds.git?ref=v1.0.3"
+  identifier             = "prod"
+  engine                 = "postgres"
+  engine_version         = "9.6.2"
+  instance_class         = "db.t2.medium"
+  allocated_storage      = 5
+  name                   = "proddb"
+  username               = "dbadmin"
+  password               = "${var.prod_db_password}"
+  port                   = "5432"
+  vpc_security_group_ids = [ "${module.security_groups.general_id}", "${module.security_groups.proddb_id}" ]
+  maintenance_window     = "Mon:00:00-Mon:03:00"
+  backup_window          = "03:00-06:00"
+  subnet_ids             = [ "${module.vpc.a-db}", "${module.vpc.b-db}" ]
+  family = "postgres9.6"
+
+  tags = {
+    Owner       = "user"
+    Environment = "dev"
+  }
+}
 ###############################
 #
 # Load Balancer Config
