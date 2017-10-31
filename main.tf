@@ -162,7 +162,7 @@ module "vpn" {
   subnet_id            = "${module.vpc.a-dmz}"
   enable_aws_eip       = true
   instance_type        = "t2.micro"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.vpn_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
 }
