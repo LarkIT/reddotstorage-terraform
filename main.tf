@@ -44,6 +44,7 @@ module "dns" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/dns.git"
   vpc_id               = "${module.vpc.vpc_id}"
   internal_domain_name = "${var.internal_domain_name}"
+  external_domain_name = "${var.external_domain_name}"
   cidr                 = "${module.vpc.cidr}"
   domain_name_servers  = "${cidrhost("${module.vpc.cidr}", 2)}"
 }
@@ -76,21 +77,21 @@ module "iam_role" {
 # Core Infrastructure Servers
 #
 ###############################
-module "jump" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
-  hostname             = "jump-01"
-  host_prefix          = "${module.vpc.host_prefix}"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  region               = "${var.region}"
-  availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-dmz}"
-  enable_aws_eip       = true
-  instance_type        = "t2.micro"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
-  route53_internal_id  = "${module.dns.route53_internal_id}"
-  route53_external_id  = "${module.dns.route53_external_id}"
+#module "jump" {
+#  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+#  hostname             = "jump-01"
+#  host_prefix          = "${module.vpc.host_prefix}"
+#  internal_domain_name = "${module.dns.internal_domain_name}"
+#  region               = "${var.region}"
+#  availability_zone    = "${module.vpc.availability_zone}"
+#  subnet_id            = "${module.vpc.a-dmz}"
+#  enable_aws_eip       = true
+#  instance_type        = "t2.micro"
+#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+#  route53_internal_id  = "${module.dns.route53_internal_id}"
+#  route53_external_id  = "${module.dns.route53_external_id}"
 #  bootstrap            = "${module.bootstrap.base_cloutinit}"
-}
+#}
 
 module "foreman" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
@@ -157,6 +158,8 @@ module "vpn" {
   hostname             = "vpn-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
+  external_dns_enable  = true
+  external_hostname    = "vpn.aws.reddotstorage.com"
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
@@ -185,7 +188,25 @@ module "stage_railsapp" {
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
-#  bootstrap            = "${module.bootstrap.railsapp_cloutinit}"
+}
+
+###############################
+#
+# Production Application Server
+#
+###############################
+module "prod_railsapp" {
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  hostname             = "prodapp-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.small"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+#  route53_external_id  = "${module.dns.route53_external_id}"
 }
 
 ###############################
@@ -255,6 +276,7 @@ module "stage_lb" {
 #  app_ssl_domain       = "staging.${var.external_domain_name}"
   app_ssl_domain       = "staging.reddotstorage.com"
   external_domain_name = "${var.external_domain_name}"
+  route53_external_id  = "${module.dns.route53_external_id}"
 }
 
 ###############################
