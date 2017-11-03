@@ -177,6 +177,7 @@ module "vpn" {
 ###############################
 module "stage_railsapp" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  role                 = "railsapp"
   hostname             = "stageapp-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
@@ -197,6 +198,7 @@ module "stage_railsapp" {
 ###############################
 module "prod_railsapp" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  role                 = "railsapp"
   hostname             = "prodapp-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
@@ -268,22 +270,43 @@ module "stage_lb" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
   environment          = "staging"
   host_prefix          = "${module.vpc.host_prefix}"
-  hostnames            = "${module.stage_railsapp.hostname_id}"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.app-lb_id}" ]
   vpc_id               = "${module.vpc.vpc_id}"
   subnets              = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
   app_ssl_enable       = "${var.app_ssl_enable}"
 #  app_ssl_domain       = "staging.${var.external_domain_name}"
   app_ssl_domain       = "staging.reddotstorage.com"
+  external_domain_name = "staging.${var.external_domain_name}"
+  route53_external_id  = "${module.dns.route53_external_id}"
+}
+
+###############################
+#
+# Load Balancer Config
+#
+###############################
+module "prod_lb" {
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
+  environment          = "production"
+  host_prefix          = "${module.vpc.host_prefix}"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.app-lb_id}" ]
+  vpc_id               = "${module.vpc.vpc_id}"
+  subnets              = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
+  app_ssl_domain       = "production.${var.external_domain_name}"
   external_domain_name = "${var.external_domain_name}"
   route53_external_id  = "${module.dns.route53_external_id}"
 }
 
 ###############################
 #
-# Attach Nodes to LB
+# Stage Attach Nodes to LB
 #
 ###############################
+resource "aws_alb_target_group_attachment" "stageapp-http" {
+  target_group_arn = "${module.stage_lb.app-http_arn}"
+  target_id        = "${module.stage_railsapp.hostname_id}"
+}
+
 resource "aws_alb_target_group_attachment" "stageapp-01-stageapp-https" {
   count            = "${var.app_ssl_enable}"
   target_group_arn = "${module.stage_lb.app-https_arn}"
