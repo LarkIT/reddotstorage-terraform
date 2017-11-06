@@ -23,13 +23,13 @@ data "terraform_remote_state" "remote_tfstate" {
 }
 
 module "vpc" {
-  source            = "git::https://nfosdick@bitbucket.org/larkit/vpc.git"
-  profile           = "${var.profile}"
-  host_prefix       = "${var.host_prefix}"
-  environment       = "${var.environment}"
-  region            = "${var.region}"
-#  availability_zone = "${var.region}${var.availability_zone}"
-  availability_zone = "a"
+  source                   = "git::https://nfosdick@bitbucket.org/larkit/vpc.git"
+  profile                  = "${var.profile}"
+  host_prefix              = "${var.host_prefix}"
+  environment              = "${var.environment}"
+  region                   = "${var.region}"
+  availability_zone        = "${var.availability_zone}"
+  internal_internet_egress = "${var.internal_internet_egress}" 
 }
 
 module "security_groups" {
@@ -189,6 +189,20 @@ module "stage_railsapp" {
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
+}
+
+module "stage_railsapp_02" {
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  role                 = "railsapp"
+  hostname             = "stageapp-02"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.small"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
 }
 
 ###############################

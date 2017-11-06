@@ -38,3 +38,7 @@ variable "app_ssl_enable" {
 variable "prod_db_password" {
   description = "Production database password."
 }
+
+variable "internal_internet_egress" {
+  description = "Allow outbound internet communication for non PCI/HIPPA environments"
+}
