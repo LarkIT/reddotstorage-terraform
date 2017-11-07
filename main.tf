@@ -210,7 +210,7 @@ module "stage_railsapp_02" {
 # Production Application Server
 #
 ###############################
-module "prod_railsapp" {
+module "prod_railsapp_01" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
   hostname             = "prodapp-01"
@@ -222,9 +222,21 @@ module "prod_railsapp" {
   instance_type        = "t2.small"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
-#  route53_external_id  = "${module.dns.route53_external_id}"
 }
 
+module "prod_railsapp_02" {
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  role                 = "railsapp"
+  hostname             = "prodapp-02"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.small"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+}
 ###############################
 #
 # Stage Database
@@ -303,7 +315,7 @@ module "prod_lb" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
   environment          = "production"
   host_prefix          = "${module.vpc.host_prefix}"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.app-lb_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prod-app-lb_id}" ]
   vpc_id               = "${module.vpc.vpc_id}"
   subnets              = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
   app_ssl_domain       = "production.${var.external_domain_name}"
@@ -328,5 +340,23 @@ resource "aws_alb_target_group_attachment" "stageapp-01-stageapp-https" {
 }
 
 
+###############################
+#
+# Prod Attach Nodes to LB
+#
+###############################
+resource "aws_alb_target_group_attachment" "prodapp_01-http" {
+  target_group_arn = "${module.prod_lb.app-http_arn}"
+  target_id        = "${module.prod_railsapp_01.hostname_id}"
+}
 
+resource "aws_alb_target_group_attachment" "prodapp_02-http" {
+  target_group_arn = "${module.prod_lb.app-http_arn}"
+  target_id        = "${module.prod_railsapp_02.hostname_id}"
+}
 
+#resource "aws_alb_target_group_attachment" "prodapp-https" {
+#  count            = "${var.app_ssl_enable}"
+#  target_group_arn = "${module.stage_lb.app-https_arn}"
+#  target_id        = "${module.stage_railsapp_01.hostname_id}"
+#}
