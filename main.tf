@@ -302,6 +302,7 @@ module "prod_lb" {
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prod-app-lb_id}" ]
   vpc_id               = "${module.vpc.vpc_id}"
   subnets              = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
+  app_ssl_enable       = "${var.app_ssl_enable}"
   app_ssl_domain       = "production.${var.external_domain_name}"
   external_domain_name = "production.${var.external_domain_name}"
   route53_external_id  = "${module.dns.route53_external_id}"
@@ -339,8 +340,14 @@ resource "aws_alb_target_group_attachment" "prodapp_02-http" {
   target_id        = "${module.prod_railsapp_02.hostname_id}"
 }
 
-#resource "aws_alb_target_group_attachment" "prodapp-https" {
-#  count            = "${var.app_ssl_enable}"
-#  target_group_arn = "${module.stage_lb.app-https_arn}"
-#  target_id        = "${module.stage_railsapp_01.hostname_id}"
-#}
+resource "aws_alb_target_group_attachment" "prodapp_01-https" {
+  count            = "${var.app_ssl_enable}"
+  target_group_arn = "${module.prod_lb.app-https_arn}"
+  target_id        = "${module.prod_railsapp_01.hostname_id}"
+}
+
+resource "aws_alb_target_group_attachment" "prodapp_02-https" {
+  count            = "${var.app_ssl_enable}"
+  target_group_arn = "${module.prod_lb.app-https_arn}"
+  target_id        = "${module.prod_railsapp_02.hostname_id}"
+}
