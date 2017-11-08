@@ -77,22 +77,6 @@ module "iam_role" {
 # Core Infrastructure Servers
 #
 ###############################
-#module "jump" {
-#  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
-#  hostname             = "jump-01"
-#  host_prefix          = "${module.vpc.host_prefix}"
-#  internal_domain_name = "${module.dns.internal_domain_name}"
-#  region               = "${var.region}"
-#  availability_zone    = "${module.vpc.availability_zone}"
-#  subnet_id            = "${module.vpc.a-dmz}"
-#  enable_aws_eip       = true
-#  instance_type        = "t2.micro"
-#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
-#  route53_internal_id  = "${module.dns.route53_internal_id}"
-#  route53_external_id  = "${module.dns.route53_external_id}"
-#  bootstrap            = "${module.bootstrap.base_cloutinit}"
-#}
-
 module "foreman" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
   hostname             = "foreman-01"
@@ -296,7 +280,7 @@ module "stage_lb" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
   environment          = "staging"
   host_prefix          = "${module.vpc.host_prefix}"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.app-lb_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stage-app-lb_id}" ]
   vpc_id               = "${module.vpc.vpc_id}"
   subnets              = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
   app_ssl_enable       = "${var.app_ssl_enable}"
@@ -319,7 +303,7 @@ module "prod_lb" {
   vpc_id               = "${module.vpc.vpc_id}"
   subnets              = [ "${module.vpc.a-dmz}", "${module.vpc.b-dmz}" ]
   app_ssl_domain       = "production.${var.external_domain_name}"
-  external_domain_name = "${var.external_domain_name}"
+  external_domain_name = "production.${var.external_domain_name}"
   route53_external_id  = "${module.dns.route53_external_id}"
 }
 
