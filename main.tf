@@ -189,6 +189,21 @@ module "stage_railsapp_02" {
   route53_internal_id  = "${module.dns.route53_internal_id}"
 }
 
+module "stage_fusion_01" {
+  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  role                 = "fusion"
+  pp_env               = "stage"
+  hostname             = "fusion-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.xlarge"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+}
+
 ###############################
 #
 # Production Application Server
@@ -203,7 +218,7 @@ module "prod_railsapp_01" {
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
-  instance_type        = "t2.small"
+  instance_type        = "t2.medium"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
 }
@@ -217,7 +232,7 @@ module "prod_railsapp_02" {
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
-  instance_type        = "t2.small"
+  instance_type        = "t2.medium"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
 }
