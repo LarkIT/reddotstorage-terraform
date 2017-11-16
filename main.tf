@@ -328,27 +328,27 @@ module "prod_lb" {
 # Stage Attach Nodes to LB
 #
 ###############################
-resource "aws_alb_target_group_attachment" "stageapp-http" {
-  target_group_arn = "${module.stage_lb.app-http_arn}"
-  target_id        = "${module.stage_railsapp.hostname_id}"
-}
-
-resource "aws_alb_target_group_attachment" "stageapp-01-stageapp-https" {
-  count            = "${var.app_ssl_enable}"
-  target_group_arn = "${module.stage_lb.app-https_arn}"
-  target_id        = "${module.stage_railsapp.hostname_id}"
-}
-
-#resource "aws_alb_target_group_attachment" "stageapp_02-http" {
+#resource "aws_alb_target_group_attachment" "stageapp-http" {
 #  target_group_arn = "${module.stage_lb.app-http_arn}"
-#  target_id        = "${module.stage_railsapp_02.hostname_id}"
+#  target_id        = "${module.stage_railsapp.hostname_id}"
 #}
 
-#resource "aws_alb_target_group_attachment" "stageapp-02-stageapp-https" {
+#resource "aws_alb_target_group_attachment" "stageapp-01-stageapp-https" {
 #  count            = "${var.app_ssl_enable}"
 #  target_group_arn = "${module.stage_lb.app-https_arn}"
-#  target_id        = "${module.stage_railsapp_02.hostname_id}"
+#  target_id        = "${module.stage_railsapp.hostname_id}"
 #}
+
+resource "aws_alb_target_group_attachment" "stageapp_02-http" {
+  target_group_arn = "${module.stage_lb.app-http_arn}"
+  target_id        = "${module.stage_railsapp_02.hostname_id}"
+}
+
+resource "aws_alb_target_group_attachment" "stageapp-02-stageapp-https" {
+  count            = "${var.app_ssl_enable}"
+  target_group_arn = "${module.stage_lb.app-https_arn}"
+  target_id        = "${module.stage_railsapp_02.hostname_id}"
+}
 ###############################
 #
 # Prod Attach Nodes to LB
