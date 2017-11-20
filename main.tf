@@ -186,11 +186,9 @@ module "stage_railsapp_02" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.small"
-#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
-  ebs_volume_size      = 30
 }
 
 module "stage_fusion_01" {
@@ -204,8 +202,7 @@ module "stage_fusion_01" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.xlarge"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}", "${module.security_groups.stage-fusion_id}" ]
-#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stage-fusion_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
 }
 
