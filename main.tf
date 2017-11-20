@@ -23,7 +23,7 @@ data "terraform_remote_state" "remote_tfstate" {
 }
 
 module "vpc" {
-  source                   = "git::https://nfosdick@bitbucket.org/larkit/vpc.git"
+  source                   = "git::https://git@bitbucket.org/larkit/vpc.git"
   profile                  = "${var.profile}"
   host_prefix              = "${var.host_prefix}"
   environment              = "${var.environment}"
@@ -33,7 +33,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source              = "git::https://nfosdick@bitbucket.org/larkit/security_groups.git"
+  source              = "git::https://git@bitbucket.org/larkit/security_groups.git"
   host_prefix         = "${var.host_prefix}"
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
@@ -41,7 +41,7 @@ module "security_groups" {
 }
 
 module "dns" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/dns.git"
+  source               = "git::https://git@bitbucket.org/larkit/dns.git"
   vpc_id               = "${module.vpc.vpc_id}"
   internal_domain_name = "${var.internal_domain_name}"
   external_domain_name = "${var.external_domain_name}"
@@ -50,24 +50,24 @@ module "dns" {
 }
 
 module "gitlab_s3_backups" {
-  source      = "git::https://nfosdick@bitbucket.org/larkit/s3.git"
+  source      = "git::https://git@bitbucket.org/larkit/s3.git"
   bucket_name = "${var.host_prefix}-gitlab-s3-backups"
 }
 
 module "policy" {
-  source     = "git::https://nfosdick@bitbucket.org/larkit/policy.git"
+  source     = "git::https://git@bitbucket.org/larkit/policy.git"
   bucket_arn = "${module.gitlab_s3_backups.bucket_arn}"
 }
 
 module "iam_role" {
-  source                = "git::https://nfosdick@bitbucket.org/larkit/iam_role.git"
+  source                = "git::https://git@bitbucket.org/larkit/iam_role.git"
   cloudwatch_policy_arn = "${module.policy.cloudwatch_policy_arn}"
   ec2_admin_policy_arn  = "${module.policy.ec2_admin_policy_arn}"
   gitlab_policy_arn     = "${module.policy.gitlab_policy_arn}"
 }
 
 #module "bootstrap" {
-#  source               = "git::https://nfosdick@bitbucket.org/larkit/bootstrap.git"
+#  source               = "git::https://git@bitbucket.org/larkit/bootstrap.git"
 #  internal_domain_name = "${module.dns.internal_domain_name}"
 #  host_prefix          = "${module.vpc.host_prefix}"
 #}
@@ -78,7 +78,7 @@ module "iam_role" {
 #
 ###############################
 module "foreman" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   hostname             = "foreman-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
@@ -95,7 +95,7 @@ module "foreman" {
 }
 
 module "gitlab" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   hostname             = "gitlab-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
@@ -118,7 +118,7 @@ module "gitlab" {
 #}
 
 module "pulp" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "pulp"
   hostname             = "pulp-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -137,7 +137,7 @@ module "pulp" {
 }
 
 module "vpn" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "vpn"
   hostname             = "vpn-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -160,7 +160,7 @@ module "vpn" {
 #
 ###############################
 #module "stage_railsapp" {
-#  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
 #  role                 = "railsapp"
 #  hostname             = "stageapp-01"
 #  host_prefix          = "${module.vpc.host_prefix}"
@@ -176,7 +176,7 @@ module "vpn" {
 #}
 
 module "stage_railsapp_02" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
   pp_env               = "staging"
   hostname             = "stageapp-02"
@@ -192,7 +192,7 @@ module "stage_railsapp_02" {
 }
 
 module "stage_fusion_01" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "fusion"
   pp_env               = "stage"
   hostname             = "fusion-01"
@@ -212,7 +212,7 @@ module "stage_fusion_01" {
 #
 ###############################
 module "prod_railsapp_01" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
   hostname             = "prodapp-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -226,7 +226,7 @@ module "prod_railsapp_01" {
 }
 
 module "prod_railsapp_02" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
   hostname             = "prodapp-02"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -299,7 +299,7 @@ module "prod_db" {
 #
 ###############################
 module "stage_lb" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws-alb.git"
   environment          = "staging"
   host_prefix          = "${module.vpc.host_prefix}"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stage-app-lb_id}" ]
@@ -318,7 +318,7 @@ module "stage_lb" {
 #
 ###############################
 module "prod_lb" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws-alb.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws-alb.git"
   environment          = "production"
   host_prefix          = "${module.vpc.host_prefix}"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prod-app-lb_id}" ]
