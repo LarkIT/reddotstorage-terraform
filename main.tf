@@ -159,25 +159,26 @@ module "vpn" {
 # Stage Application Server
 #
 ###############################
-module "stage_railsapp" {
-  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
-  role                 = "railsapp"
-  hostname             = "stageapp-01"
-  host_prefix          = "${module.vpc.host_prefix}"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  region               = "${var.region}"
-  availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-dmz}"
-  enable_aws_eip       = true
-  instance_type        = "t2.small"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
-  route53_internal_id  = "${module.dns.route53_internal_id}"
-  route53_external_id  = "${module.dns.route53_external_id}"
-}
+#module "stage_railsapp" {
+#  source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
+#  role                 = "railsapp"
+#  hostname             = "stageapp-01"
+#  host_prefix          = "${module.vpc.host_prefix}"
+#  internal_domain_name = "${module.dns.internal_domain_name}"
+#  region               = "${var.region}"
+#  availability_zone    = "${module.vpc.availability_zone}"
+#  subnet_id            = "${module.vpc.a-dmz}"
+#  enable_aws_eip       = true
+#  instance_type        = "t2.small"
+#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
+#  route53_internal_id  = "${module.dns.route53_internal_id}"
+#  route53_external_id  = "${module.dns.route53_external_id}"
+#}
 
 module "stage_railsapp_02" {
   source               = "git::https://nfosdick@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
+  pp_env               = "staging"
   hostname             = "stageapp-02"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
@@ -185,8 +186,11 @@ module "stage_railsapp_02" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.small"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
+#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
+  ebs_volume_size      = 30
 }
 
 module "stage_fusion_01" {
@@ -200,7 +204,8 @@ module "stage_fusion_01" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.xlarge"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}", "${module.security_groups.stage-fusion_id}" ]
+#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
 }
 
@@ -264,6 +269,11 @@ module "stage_db" {
   }
 }
 
+###############################
+#
+# Prod Database
+#
+###############################
 module "prod_db" {
   source                 = "git::https://github.com/terraform-aws-modules/terraform-aws-rds.git?ref=v1.0.3"
   identifier             = "prod"
@@ -328,17 +338,6 @@ module "prod_lb" {
 # Stage Attach Nodes to LB
 #
 ###############################
-#resource "aws_alb_target_group_attachment" "stageapp-http" {
-#  target_group_arn = "${module.stage_lb.app-http_arn}"
-#  target_id        = "${module.stage_railsapp.hostname_id}"
-#}
-
-#resource "aws_alb_target_group_attachment" "stageapp-01-stageapp-https" {
-#  count            = "${var.app_ssl_enable}"
-#  target_group_arn = "${module.stage_lb.app-https_arn}"
-#  target_id        = "${module.stage_railsapp.hostname_id}"
-#}
-
 resource "aws_alb_target_group_attachment" "stageapp_02-http" {
   target_group_arn = "${module.stage_lb.app-http_arn}"
   target_id        = "${module.stage_railsapp_02.hostname_id}"
