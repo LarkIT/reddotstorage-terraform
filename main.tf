@@ -54,6 +54,12 @@ module "gitlab_s3_backups" {
   bucket_name = "${var.host_prefix}-gitlab-s3-backups"
 }
 
+module "software" {
+  source      = "git::https://git@bitbucket.org/larkit/s3.git"
+  bucket_name = "${var.host_prefix}-software"
+  acl         = "public-read"
+}
+
 module "policy" {
   source     = "git::https://git@bitbucket.org/larkit/policy.git"
   bucket_arn = "${module.gitlab_s3_backups.bucket_arn}"
@@ -159,22 +165,6 @@ module "vpn" {
 # Stage Application Server
 #
 ###############################
-#module "stage_railsapp" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
-#  role                 = "railsapp"
-#  hostname             = "stageapp-01"
-#  host_prefix          = "${module.vpc.host_prefix}"
-#  internal_domain_name = "${module.dns.internal_domain_name}"
-#  region               = "${var.region}"
-#  availability_zone    = "${module.vpc.availability_zone}"
-#  subnet_id            = "${module.vpc.a-dmz}"
-#  enable_aws_eip       = true
-#  instance_type        = "t2.small"
-#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.stageapp_id}" ]
-#  route53_internal_id  = "${module.dns.route53_internal_id}"
-#  route53_external_id  = "${module.dns.route53_external_id}"
-#}
-
 module "stage_railsapp_02" {
   source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
@@ -223,6 +213,7 @@ module "prod_railsapp_01" {
   instance_type        = "t2.medium"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
 }
 
 module "prod_railsapp_02" {
@@ -237,6 +228,7 @@ module "prod_railsapp_02" {
   instance_type        = "t2.medium"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
 }
 ###############################
 #
