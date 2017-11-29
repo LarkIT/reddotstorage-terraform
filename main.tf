@@ -84,24 +84,24 @@ module "iam_role" {
 #
 ###############################
 module "foreman" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+  role                 = "foreman"
   hostname             = "foreman-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-dmz}"
-  enable_aws_eip       = true
-  #subnet_id            = "${module.vpc.a-shared}"
+  subnet_id            = "${module.vpc.a-shared}"
   instance_type        = "t2.medium"
+  bootstrap_template   = "foreman-install"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.foreman_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
-  route53_external_id  = "${module.dns.route53_external_id}"
-#  bootstrap            = "${module.bootstrap.foreman_cloutinit}"
+#  route53_external_id  = "${module.dns.route53_external_id}"
 }
 
 module "gitlab" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+  role                 = "gitlab"
   hostname             = "gitlab-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
@@ -109,10 +109,10 @@ module "gitlab" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-dmz}"
   instance_type        = "t2.medium"
+  bootstrap_template   = "gitlab-install"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   route53_external_id  = "${module.dns.route53_external_id}"
-#  bootstrap            = "${module.bootstrap.gitlab_cloutinit}"
 }
 
 #resource "aws_ebs_volume" "pulp" {
@@ -123,27 +123,26 @@ module "gitlab" {
 #    }
 #}
 
-module "pulp" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
-  role                 = "pulp"
-  hostname             = "pulp-01"
-  host_prefix          = "${module.vpc.host_prefix}"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  region               = "${var.region}"
-  availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-shared}"
-  #subnet_id            = "${module.vpc.a-dmz}"
-  instance_type        = "t2.medium"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
-  route53_internal_id  = "${module.dns.route53_internal_id}"
-  route53_external_id  = "${module.dns.route53_external_id}"
-  enable_ebs_volume    = true
-  ebs_volume_size      = 100
-#  bootstrap            = "${module.bootstrap.pulp_cloutinit}"
-}
+#module "pulp" {
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  role                 = "pulp"
+#  hostname             = "pulp-01"
+#  host_prefix          = "${module.vpc.host_prefix}"
+#  internal_domain_name = "${module.dns.internal_domain_name}"
+#  region               = "${var.region}"
+#  availability_zone    = "${module.vpc.availability_zone}"
+#  subnet_id            = "${module.vpc.a-shared}"
+#  #subnet_id            = "${module.vpc.a-dmz}"
+#  instance_type        = "t2.medium"
+#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+#  route53_internal_id  = "${module.dns.route53_internal_id}"
+#  route53_external_id  = "${module.dns.route53_external_id}"
+#  enable_ebs_volume    = true
+#  ebs_volume_size      = 100
+#}
 
 module "vpn" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
   role                 = "vpn"
   hostname             = "vpn-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -166,7 +165,7 @@ module "vpn" {
 #
 ###############################
 module "stage_railsapp_02" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
   role                 = "railsapp"
   pp_env               = "staging"
   hostname             = "stageapp-02"
@@ -179,10 +178,11 @@ module "stage_railsapp_02" {
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
+  ebs_type             = "standard"
 }
 
 module "stage_fusion_01" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
   role                 = "fusion"
   pp_env               = "stage"
   hostname             = "fusion-01"
@@ -201,35 +201,35 @@ module "stage_fusion_01" {
 # Production Application Server
 #
 ###############################
-module "prod_railsapp_01" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
-  role                 = "railsapp"
-  hostname             = "prodapp-01"
-  host_prefix          = "${module.vpc.host_prefix}"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  region               = "${var.region}"
-  availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-app}"
-  instance_type        = "t2.medium"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
-  route53_internal_id  = "${module.dns.route53_internal_id}"
-  enable_ebs_volume    = true
-}
+#module "prod_railsapp_01" {
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  role                 = "railsapp"
+#  hostname             = "prodapp-01"
+#  host_prefix          = "${module.vpc.host_prefix}"
+#  internal_domain_name = "${module.dns.internal_domain_name}"
+#  region               = "${var.region}"
+#  availability_zone    = "${module.vpc.availability_zone}"
+#  subnet_id            = "${module.vpc.a-app}"
+#  instance_type        = "t2.medium"
+#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
+#  route53_internal_id  = "${module.dns.route53_internal_id}"
+#  enable_ebs_volume    = true
+#}
 
-module "prod_railsapp_02" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
-  role                 = "railsapp"
-  hostname             = "prodapp-02"
-  host_prefix          = "${module.vpc.host_prefix}"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  region               = "${var.region}"
-  availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-app}"
-  instance_type        = "t2.medium"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
-  route53_internal_id  = "${module.dns.route53_internal_id}"
-  enable_ebs_volume    = true
-}
+#module "prod_railsapp_02" {
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  role                 = "railsapp"
+#  hostname             = "prodapp-02"
+#  host_prefix          = "${module.vpc.host_prefix}"
+#  internal_domain_name = "${module.dns.internal_domain_name}"
+#  region               = "${var.region}"
+#  availability_zone    = "${module.vpc.availability_zone}"
+#  subnet_id            = "${module.vpc.a-app}"
+#  instance_type        = "t2.medium"
+#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
+#  route53_internal_id  = "${module.dns.route53_internal_id}"
+#  enable_ebs_volume    = true
+#}
 ###############################
 #
 # Stage Database
@@ -342,24 +342,24 @@ resource "aws_alb_target_group_attachment" "stageapp-02-stageapp-https" {
 # Prod Attach Nodes to LB
 #
 ###############################
-resource "aws_alb_target_group_attachment" "prodapp_01-http" {
-  target_group_arn = "${module.prod_lb.app-http_arn}"
-  target_id        = "${module.prod_railsapp_01.hostname_id}"
-}
+#resource "aws_alb_target_group_attachment" "prodapp_01-http" {
+#  target_group_arn = "${module.prod_lb.app-http_arn}"
+#  target_id        = "${module.prod_railsapp_01.hostname_id}"
+#}
 
-resource "aws_alb_target_group_attachment" "prodapp_02-http" {
-  target_group_arn = "${module.prod_lb.app-http_arn}"
-  target_id        = "${module.prod_railsapp_02.hostname_id}"
-}
+#resource "aws_alb_target_group_attachment" "prodapp_02-http" {
+#  target_group_arn = "${module.prod_lb.app-http_arn}"
+#  target_id        = "${module.prod_railsapp_02.hostname_id}"
+#}
 
-resource "aws_alb_target_group_attachment" "prodapp_01-https" {
-  count            = "${var.app_ssl_enable}"
-  target_group_arn = "${module.prod_lb.app-https_arn}"
-  target_id        = "${module.prod_railsapp_01.hostname_id}"
-}
+#resource "aws_alb_target_group_attachment" "prodapp_01-https" {
+#  count            = "${var.app_ssl_enable}"
+#  target_group_arn = "${module.prod_lb.app-https_arn}"
+#  target_id        = "${module.prod_railsapp_01.hostname_id}"
+#}
 
-resource "aws_alb_target_group_attachment" "prodapp_02-https" {
-  count            = "${var.app_ssl_enable}"
-  target_group_arn = "${module.prod_lb.app-https_arn}"
-  target_id        = "${module.prod_railsapp_02.hostname_id}"
-}
+#resource "aws_alb_target_group_attachment" "prodapp_02-https" {
+#  count            = "${var.app_ssl_enable}"
+#  target_group_arn = "${module.prod_lb.app-https_arn}"
+#  target_id        = "${module.prod_railsapp_02.hostname_id}"
+#}
