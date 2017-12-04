@@ -72,19 +72,14 @@ module "iam_role" {
   gitlab_policy_arn     = "${module.policy.gitlab_policy_arn}"
 }
 
-#module "bootstrap" {
-#  source               = "git::https://git@bitbucket.org/larkit/bootstrap.git"
-#  internal_domain_name = "${module.dns.internal_domain_name}"
-#  host_prefix          = "${module.vpc.host_prefix}"
-#}
-
 ###############################
 #
 # Core Infrastructure Servers
 #
 ###############################
 module "foreman" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "foreman"
   hostname             = "foreman-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -100,19 +95,21 @@ module "foreman" {
 }
 
 module "gitlab" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "gitlab"
   hostname             = "gitlab-01"
   host_prefix          = "${module.vpc.host_prefix}"
   internal_domain_name = "${module.dns.internal_domain_name}"
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-dmz}"
+  #subnet_id            = "${module.vpc.a-dmz}"
+  subnet_id            = "${module.vpc.a-shared}"
   instance_type        = "t2.medium"
   bootstrap_template   = "gitlab-install"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+  #security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.gitlab_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
-  route53_external_id  = "${module.dns.route53_external_id}"
 }
 
 #resource "aws_ebs_volume" "pulp" {
@@ -124,7 +121,7 @@ module "gitlab" {
 #}
 
 #module "pulp" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
 #  role                 = "pulp"
 #  hostname             = "pulp-01"
 #  host_prefix          = "${module.vpc.host_prefix}"
@@ -142,7 +139,7 @@ module "gitlab" {
 #}
 
 module "vpn" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "vpn"
   hostname             = "vpn-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -165,7 +162,8 @@ module "vpn" {
 #
 ###############################
 module "stage_railsapp_02" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
   pp_env               = "staging"
   hostname             = "stageapp-02"
@@ -182,7 +180,8 @@ module "stage_railsapp_02" {
 }
 
 module "stage_fusion_01" {
-  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+  #source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "fusion"
   pp_env               = "stage"
   hostname             = "fusion-01"
@@ -202,7 +201,7 @@ module "stage_fusion_01" {
 #
 ###############################
 #module "prod_railsapp_01" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
 #  role                 = "railsapp"
 #  hostname             = "prodapp-01"
 #  host_prefix          = "${module.vpc.host_prefix}"
@@ -217,7 +216,7 @@ module "stage_fusion_01" {
 #}
 
 #module "prod_railsapp_02" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.1"
+#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
 #  role                 = "railsapp"
 #  hostname             = "prodapp-02"
 #  host_prefix          = "${module.vpc.host_prefix}"
