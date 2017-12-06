@@ -120,23 +120,21 @@ module "gitlab" {
 #    }
 #}
 
-#module "pulp" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
-#  role                 = "pulp"
-#  hostname             = "pulp-01"
-#  host_prefix          = "${module.vpc.host_prefix}"
-#  internal_domain_name = "${module.dns.internal_domain_name}"
-#  region               = "${var.region}"
-#  availability_zone    = "${module.vpc.availability_zone}"
-#  subnet_id            = "${module.vpc.a-shared}"
-#  #subnet_id            = "${module.vpc.a-dmz}"
-#  instance_type        = "t2.medium"
-#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
-#  route53_internal_id  = "${module.dns.route53_internal_id}"
-#  route53_external_id  = "${module.dns.route53_external_id}"
-#  enable_ebs_volume    = true
-#  ebs_volume_size      = 100
-#}
+module "pulp" {
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  role                 = "pulp"
+  hostname             = "pulp-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-shared}"
+  instance_type        = "t2.medium"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
+  ebs_volume_size      = 130
+}
 
 module "vpn" {
   source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
