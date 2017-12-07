@@ -106,6 +106,7 @@ module "gitlab" {
   #subnet_id            = "${module.vpc.a-dmz}"
   subnet_id            = "${module.vpc.a-shared}"
   instance_type        = "t2.medium"
+  iam_instance_profile = "gitlab"
   bootstrap_template   = "gitlab-install"
   #security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.gitlab_id}" ]
