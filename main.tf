@@ -78,7 +78,6 @@ module "iam_role" {
 #
 ###############################
 module "foreman" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
   source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "foreman"
   hostname             = "foreman-01"
@@ -87,11 +86,10 @@ module "foreman" {
   region               = "${var.region}"
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-shared}"
-  instance_type        = "t2.medium"
+  instance_type        = "t2.large"
   bootstrap_template   = "foreman-install"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.foreman_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
-#  route53_external_id  = "${module.dns.route53_external_id}"
 }
 
 module "gitlab" {
