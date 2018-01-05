@@ -38,6 +38,7 @@ module "security_groups" {
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
   infra_services_cidr = "${module.vpc.dmz_subnet_cidr}"
+  enable_postgres     = true
 }
 
 module "dns" {
@@ -93,7 +94,6 @@ module "foreman" {
 }
 
 module "gitlab" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
   source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "gitlab"
   hostname             = "gitlab-01"
@@ -106,18 +106,9 @@ module "gitlab" {
   instance_type        = "t2.medium"
   iam_instance_profile = "gitlab"
   bootstrap_template   = "gitlab-install"
-  #security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}" ]
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.gitlab_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
 }
-
-#resource "aws_ebs_volume" "pulp" {
-#    availability_zone = "${var.region}${var.availability_zone}"
-#    size              = 100
-#    tags {
-#        Name = "Pulp Volume"
-#    }
-#}
 
 module "pulp" {
   source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
@@ -159,7 +150,6 @@ module "vpn" {
 #
 ###############################
 module "stage_railsapp_02" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
   source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "railsapp"
   pp_env               = "staging"
@@ -177,7 +167,6 @@ module "stage_railsapp_02" {
 }
 
 module "stage_fusion_01" {
-  #source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
   source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
   role                 = "fusion"
   pp_env               = "stage"
@@ -197,35 +186,35 @@ module "stage_fusion_01" {
 # Production Application Server
 #
 ###############################
-#module "prod_railsapp_01" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
-#  role                 = "railsapp"
-#  hostname             = "prodapp-01"
-#  host_prefix          = "${module.vpc.host_prefix}"
-#  internal_domain_name = "${module.dns.internal_domain_name}"
-#  region               = "${var.region}"
-#  availability_zone    = "${module.vpc.availability_zone}"
-#  subnet_id            = "${module.vpc.a-app}"
-#  instance_type        = "t2.medium"
-#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
-#  route53_internal_id  = "${module.dns.route53_internal_id}"
-#  enable_ebs_volume    = true
-#}
+module "prod_railsapp_01" {
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  role                 = "railsapp"
+  hostname             = "prodapp-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.medium"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prodapp_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
+}
 
-#module "prod_railsapp_02" {
-#  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git?ref=v0.0.2"
-#  role                 = "railsapp"
-#  hostname             = "prodapp-02"
-#  host_prefix          = "${module.vpc.host_prefix}"
-#  internal_domain_name = "${module.dns.internal_domain_name}"
-#  region               = "${var.region}"
-#  availability_zone    = "${module.vpc.availability_zone}"
-#  subnet_id            = "${module.vpc.a-app}"
-#  instance_type        = "t2.medium"
-#  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.prodapp_id}" ]
-#  route53_internal_id  = "${module.dns.route53_internal_id}"
-#  enable_ebs_volume    = true
-#}
+module "prod_railsapp_02" {
+  source               = "git::https://git@bitbucket.org/larkit/aws_instance.git"
+  role                 = "railsapp"
+  hostname             = "prodapp-02"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.medium"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prodapp_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
+}
 ###############################
 #
 # Stage Database
