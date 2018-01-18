@@ -276,7 +276,8 @@ module "prod_db" {
 #
 ###############################
 module "stage_lb" {
-  source               = "git::https://git@bitbucket.org/larkit/aws-alb.git"
+#  source               = "git::https://git@bitbucket.org/larkit/aws-alb.git"
+  source               = "git::https://github.com/LarkIT/aws-alb.git?ref=v0.0.1"
   environment          = "staging"
   host_prefix          = "${module.vpc.host_prefix}"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stage-app-lb_id}" ]
@@ -327,24 +328,24 @@ resource "aws_alb_target_group_attachment" "stageapp-02-stageapp-https" {
 # Prod Attach Nodes to LB
 #
 ###############################
-#resource "aws_alb_target_group_attachment" "prodapp_01-http" {
-#  target_group_arn = "${module.prod_lb.app-http_arn}"
-#  target_id        = "${module.prod_railsapp_01.hostname_id}"
-#}
+resource "aws_alb_target_group_attachment" "prodapp_01-http" {
+  target_group_arn = "${module.prod_lb.app-http_arn}"
+  target_id        = "${module.prod_railsapp_01.hostname_id}"
+}
 
-#resource "aws_alb_target_group_attachment" "prodapp_02-http" {
-#  target_group_arn = "${module.prod_lb.app-http_arn}"
-#  target_id        = "${module.prod_railsapp_02.hostname_id}"
-#}
+resource "aws_alb_target_group_attachment" "prodapp_02-http" {
+  target_group_arn = "${module.prod_lb.app-http_arn}"
+  target_id        = "${module.prod_railsapp_02.hostname_id}"
+}
 
-#resource "aws_alb_target_group_attachment" "prodapp_01-https" {
-#  count            = "${var.app_ssl_enable}"
-#  target_group_arn = "${module.prod_lb.app-https_arn}"
-#  target_id        = "${module.prod_railsapp_01.hostname_id}"
-#}
+resource "aws_alb_target_group_attachment" "prodapp_01-https" {
+  count            = "${var.app_ssl_enable}"
+  target_group_arn = "${module.prod_lb.app-https_arn}"
+  target_id        = "${module.prod_railsapp_01.hostname_id}"
+}
 
-#resource "aws_alb_target_group_attachment" "prodapp_02-https" {
-#  count            = "${var.app_ssl_enable}"
-#  target_group_arn = "${module.prod_lb.app-https_arn}"
-#  target_id        = "${module.prod_railsapp_02.hostname_id}"
-#}
+resource "aws_alb_target_group_attachment" "prodapp_02-https" {
+  count            = "${var.app_ssl_enable}"
+  target_group_arn = "${module.prod_lb.app-https_arn}"
+  target_id        = "${module.prod_railsapp_02.hostname_id}"
+}
