@@ -23,7 +23,7 @@ data "terraform_remote_state" "remote_tfstate" {
 }
 
 module "vpc" {
-  source                   = "git::https://git@bitbucket.org/larkit/vpc.git"
+  source                   = "git::https://github.com/LarkIT/vpc.git?ref=v0.0.1"
   profile                  = "${var.profile}"
   host_prefix              = "${var.host_prefix}"
   environment              = "${var.environment}"
@@ -33,7 +33,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source              = "git::https://git@bitbucket.org/larkit/security_groups.git"
+  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.2"
   host_prefix         = "${var.host_prefix}"
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
