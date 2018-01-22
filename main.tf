@@ -67,7 +67,8 @@ module "policy" {
 }
 
 module "iam_role" {
-  source                = "git::https://git@bitbucket.org/larkit/iam_role.git"
+#  source                = "git::https://git@bitbucket.org/larkit/iam_role.git"
+  source                = "git::https://github.com/LarkIT/iam_role.git?ref=v0.0.1"
   cloudwatch_policy_arn = "${module.policy.cloudwatch_policy_arn}"
   ec2_admin_policy_arn  = "${module.policy.ec2_admin_policy_arn}"
   gitlab_policy_arn     = "${module.policy.gitlab_policy_arn}"
@@ -79,7 +80,7 @@ module "iam_role" {
 #
 ###############################
 module "foreman" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "foreman"
   hostname             = "foreman-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -94,7 +95,7 @@ module "foreman" {
 }
 
 module "gitlab" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "gitlab"
   hostname             = "gitlab-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -111,7 +112,7 @@ module "gitlab" {
 }
 
 module "pulp" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "pulp"
   hostname             = "pulp-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -127,7 +128,7 @@ module "pulp" {
 }
 
 module "vpn" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "vpn"
   hostname             = "vpn-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -150,7 +151,7 @@ module "vpn" {
 #
 ###############################
 module "stage_railsapp_02" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "railsapp"
   pp_env               = "staging"
   hostname             = "stageapp-02"
@@ -167,7 +168,7 @@ module "stage_railsapp_02" {
 }
 
 module "stage_fusion_01" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "fusion"
   pp_env               = "stage"
   hostname             = "fusion-01"
@@ -187,7 +188,7 @@ module "stage_fusion_01" {
 #
 ###############################
 module "prod_railsapp_01" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "railsapp"
   hostname             = "prodapp-01"
   host_prefix          = "${module.vpc.host_prefix}"
@@ -202,7 +203,7 @@ module "prod_railsapp_01" {
 }
 
 module "prod_railsapp_02" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.1"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "railsapp"
   hostname             = "prodapp-02"
   host_prefix          = "${module.vpc.host_prefix}"
