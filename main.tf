@@ -42,7 +42,7 @@ module "security_groups" {
 }
 
 module "dns" {
-  source               = "git::https://git@bitbucket.org/larkit/dns.git"
+  source               = "git::https://github.com/LarkIT/dns.git?ref=v0.0.1"
   vpc_id               = "${module.vpc.vpc_id}"
   internal_domain_name = "${var.internal_domain_name}"
   external_domain_name = "${var.external_domain_name}"
@@ -51,23 +51,22 @@ module "dns" {
 }
 
 module "gitlab_s3_backups" {
-  source      = "git::https://git@bitbucket.org/larkit/s3.git"
+  source      = "git::https://github.com/LarkIT/s3.git?ref=v0.0.1"
   bucket_name = "${var.host_prefix}-gitlab-s3-backups"
 }
 
 module "software" {
-  source      = "git::https://git@bitbucket.org/larkit/s3.git"
+  source      = "git::https://github.com/LarkIT/s3.git?ref=v0.0.1"
   bucket_name = "${var.host_prefix}-software"
   acl         = "public-read"
 }
 
 module "policy" {
-  source     = "git::https://git@bitbucket.org/larkit/policy.git"
+  source     = "git::https://github.com/LarkIT/policy.git?ref=v0.0.1"
   bucket_arn = "${module.gitlab_s3_backups.bucket_arn}"
 }
 
 module "iam_role" {
-#  source                = "git::https://git@bitbucket.org/larkit/iam_role.git"
   source                = "git::https://github.com/LarkIT/iam_role.git?ref=v0.0.1"
   cloudwatch_policy_arn = "${module.policy.cloudwatch_policy_arn}"
   ec2_admin_policy_arn  = "${module.policy.ec2_admin_policy_arn}"
