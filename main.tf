@@ -229,7 +229,7 @@ module "stage_db" {
   allocated_storage      = 5
   name                   = "stagedb"
   username               = "dbadmin"
-  password               = "YourPwdShouldBeLongAndSecure!"
+  password               = "${var.stage_db_password}"
   port                   = "5432"
   vpc_security_group_ids = [ "${module.security_groups.general_id}", "${module.security_groups.stagedb_id}" ]
   maintenance_window     = "Mon:00:00-Mon:03:00"
