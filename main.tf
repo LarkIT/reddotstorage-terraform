@@ -33,7 +33,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.2"
+  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.3"
   host_prefix         = "${var.host_prefix}"
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
@@ -179,6 +179,22 @@ module "stage_fusion_01" {
   instance_type        = "t2.xlarge"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stage-fusion_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
+}
+
+module "stage_fusion_02" {
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
+  role                 = "fusion"
+  pp_env               = "stage"
+  hostname             = "stagefusion-02"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.xlarge"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stage-fusion_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
 }
 
 ###############################
