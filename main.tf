@@ -33,7 +33,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.3"
+  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.5"
   host_prefix         = "${var.host_prefix}"
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
@@ -59,6 +59,66 @@ module "software" {
   source      = "git::https://github.com/LarkIT/s3.git?ref=v0.0.1"
   bucket_name = "${var.host_prefix}-software"
   acl         = "public-read"
+}
+
+resource "aws_s3_bucket" "stage_document_uploads" {
+  bucket     = "${var.host_prefix}-stage-document-uploads"
+  acl        = "private"
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_iam_policy" "stage_document_uploads_policy" {
+  name = "document_upload"
+  path = "/"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "${aws_s3_bucket.stage_document_uploads.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "${aws_s3_bucket.stage_document_uploads.arn}/*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role" "stage_document_uploads" {
+    name               = "stage_document_uploads"
+    path               = "/"
+    assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_instance_profile" "stage_railsapp" {
+  name = "stage_railsapp"
+  role = "${aws_iam_role.stage_document_uploads.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "document_upload" {
+  role       = "${aws_iam_role.stage_document_uploads.name}"
+  policy_arn = "${aws_iam_policy.stage_document_uploads_policy.arn}"
 }
 
 module "policy" {
@@ -160,6 +220,7 @@ module "stage_railsapp_02" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.small"
+  iam_instance_profile = "stage_railsapp"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stageapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
