@@ -69,6 +69,14 @@ resource "aws_s3_bucket" "stage_document_uploads" {
   }
 }
 
+resource "aws_s3_bucket" "production_document_uploads" {
+  bucket     = "${var.host_prefix}-production-document-uploads"
+  acl        = "private"
+  versioning {
+    enabled = true
+  }
+}
+
 resource "aws_iam_policy" "stage_document_uploads_policy" {
   name = "document_upload"
   path = "/"
@@ -86,6 +94,29 @@ resource "aws_iam_policy" "stage_document_uploads_policy" {
             "Effect": "Allow",
             "Action": "s3:*",
             "Resource": "${aws_s3_bucket.stage_document_uploads.arn}/*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "production_document_uploads_policy" {
+  name = "production_document_upload"
+  path = "/"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "${aws_s3_bucket.production_document_uploads.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "${aws_s3_bucket.production_document_uploads.arn}/*"
         }
     ]
 }
@@ -111,6 +142,25 @@ resource "aws_iam_role" "stage_document_uploads" {
 POLICY
 }
 
+resource "aws_iam_role" "production_document_uploads" {
+    name               = "production_document_uploads"
+    path               = "/"
+    assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
 resource "aws_iam_instance_profile" "stage_railsapp" {
   name = "stage_railsapp"
   role = "${aws_iam_role.stage_document_uploads.name}"
@@ -119,6 +169,16 @@ resource "aws_iam_instance_profile" "stage_railsapp" {
 resource "aws_iam_role_policy_attachment" "document_upload" {
   role       = "${aws_iam_role.stage_document_uploads.name}"
   policy_arn = "${aws_iam_policy.stage_document_uploads_policy.arn}"
+}
+
+resource "aws_iam_instance_profile" "prod_railsapp" {
+  name = "prod_railsapp"
+  role = "${aws_iam_role.production_document_uploads.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "prod_document_upload" {
+  role       = "${aws_iam_role.production_document_uploads.name}"
+  policy_arn = "${aws_iam_policy.production_document_uploads_policy.arn}"
 }
 
 module "policy" {
@@ -273,6 +333,7 @@ module "prod_railsapp_01" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.medium"
+  iam_instance_profile = "prod_railsapp"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
@@ -288,6 +349,7 @@ module "prod_railsapp_02" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.medium"
+  iam_instance_profile = "prod_railsapp"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
