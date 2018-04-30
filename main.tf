@@ -33,7 +33,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.5"
+  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.6"
   host_prefix         = "${var.host_prefix}"
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
@@ -354,6 +354,23 @@ module "prod_railsapp_02" {
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
 }
+
+module "prod_fusion_01" {
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
+  role                 = "fusion"
+  pp_env               = "prod"
+  hostname             = "prodfusion-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.xlarge"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prod-fusion_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
+}
+
 ###############################
 #
 # Stage Database
@@ -471,10 +488,10 @@ resource "aws_alb_target_group_attachment" "prodapp_01-http" {
   target_id        = "${module.prod_railsapp_01.hostname_id}"
 }
 
-resource "aws_alb_target_group_attachment" "prodapp_02-http" {
-  target_group_arn = "${module.prod_lb.app-http_arn}"
-  target_id        = "${module.prod_railsapp_02.hostname_id}"
-}
+# resource "aws_alb_target_group_attachment" "prodapp_02-http" {
+#   target_group_arn = "${module.prod_lb.app-http_arn}"
+#   target_id        = "${module.prod_railsapp_02.hostname_id}"
+# }
 
 resource "aws_alb_target_group_attachment" "prodapp_01-https" {
   count            = "${var.app_ssl_enable}"
@@ -482,8 +499,8 @@ resource "aws_alb_target_group_attachment" "prodapp_01-https" {
   target_id        = "${module.prod_railsapp_01.hostname_id}"
 }
 
-resource "aws_alb_target_group_attachment" "prodapp_02-https" {
-  count            = "${var.app_ssl_enable}"
-  target_group_arn = "${module.prod_lb.app-https_arn}"
-  target_id        = "${module.prod_railsapp_02.hostname_id}"
-}
+#resource "aws_alb_target_group_attachment" "prodapp_02-https" {
+#  count            = "${var.app_ssl_enable}"
+#  target_group_arn = "${module.prod_lb.app-https_arn}"
+#  target_id        = "${module.prod_railsapp_02.hostname_id}"
+#}
