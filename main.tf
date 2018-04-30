@@ -33,7 +33,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.5"
+  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.6"
   host_prefix         = "${var.host_prefix}"
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
@@ -69,6 +69,14 @@ resource "aws_s3_bucket" "stage_document_uploads" {
   }
 }
 
+resource "aws_s3_bucket" "production_document_uploads" {
+  bucket     = "${var.host_prefix}-production-document-uploads"
+  acl        = "private"
+  versioning {
+    enabled = true
+  }
+}
+
 resource "aws_iam_policy" "stage_document_uploads_policy" {
   name = "document_upload"
   path = "/"
@@ -86,6 +94,29 @@ resource "aws_iam_policy" "stage_document_uploads_policy" {
             "Effect": "Allow",
             "Action": "s3:*",
             "Resource": "${aws_s3_bucket.stage_document_uploads.arn}/*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "production_document_uploads_policy" {
+  name = "production_document_upload"
+  path = "/"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "${aws_s3_bucket.production_document_uploads.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "${aws_s3_bucket.production_document_uploads.arn}/*"
         }
     ]
 }
@@ -111,6 +142,25 @@ resource "aws_iam_role" "stage_document_uploads" {
 POLICY
 }
 
+resource "aws_iam_role" "production_document_uploads" {
+    name               = "production_document_uploads"
+    path               = "/"
+    assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
 resource "aws_iam_instance_profile" "stage_railsapp" {
   name = "stage_railsapp"
   role = "${aws_iam_role.stage_document_uploads.name}"
@@ -119,6 +169,16 @@ resource "aws_iam_instance_profile" "stage_railsapp" {
 resource "aws_iam_role_policy_attachment" "document_upload" {
   role       = "${aws_iam_role.stage_document_uploads.name}"
   policy_arn = "${aws_iam_policy.stage_document_uploads_policy.arn}"
+}
+
+resource "aws_iam_instance_profile" "prod_railsapp" {
+  name = "prod_railsapp"
+  role = "${aws_iam_role.production_document_uploads.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "prod_document_upload" {
+  role       = "${aws_iam_role.production_document_uploads.name}"
+  policy_arn = "${aws_iam_policy.production_document_uploads_policy.arn}"
 }
 
 module "policy" {
@@ -273,6 +333,7 @@ module "prod_railsapp_01" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.medium"
+  iam_instance_profile = "prod_railsapp"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
@@ -288,10 +349,28 @@ module "prod_railsapp_02" {
   availability_zone    = "${module.vpc.availability_zone}"
   subnet_id            = "${module.vpc.a-app}"
   instance_type        = "t2.medium"
+  iam_instance_profile = "prod_railsapp"
   security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prodapp_id}" ]
   route53_internal_id  = "${module.dns.route53_internal_id}"
   enable_ebs_volume    = true
 }
+
+module "prod_fusion_01" {
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
+  role                 = "fusion"
+  pp_env               = "prod"
+  hostname             = "prodfusion-01"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.xlarge"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prod-fusion_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
+}
+
 ###############################
 #
 # Stage Database
@@ -409,10 +488,10 @@ resource "aws_alb_target_group_attachment" "prodapp_01-http" {
   target_id        = "${module.prod_railsapp_01.hostname_id}"
 }
 
-resource "aws_alb_target_group_attachment" "prodapp_02-http" {
-  target_group_arn = "${module.prod_lb.app-http_arn}"
-  target_id        = "${module.prod_railsapp_02.hostname_id}"
-}
+# resource "aws_alb_target_group_attachment" "prodapp_02-http" {
+#   target_group_arn = "${module.prod_lb.app-http_arn}"
+#   target_id        = "${module.prod_railsapp_02.hostname_id}"
+# }
 
 resource "aws_alb_target_group_attachment" "prodapp_01-https" {
   count            = "${var.app_ssl_enable}"
@@ -420,8 +499,8 @@ resource "aws_alb_target_group_attachment" "prodapp_01-https" {
   target_id        = "${module.prod_railsapp_01.hostname_id}"
 }
 
-resource "aws_alb_target_group_attachment" "prodapp_02-https" {
-  count            = "${var.app_ssl_enable}"
-  target_group_arn = "${module.prod_lb.app-https_arn}"
-  target_id        = "${module.prod_railsapp_02.hostname_id}"
-}
+#resource "aws_alb_target_group_attachment" "prodapp_02-https" {
+#  count            = "${var.app_ssl_enable}"
+#  target_group_arn = "${module.prod_lb.app-https_arn}"
+#  target_id        = "${module.prod_railsapp_02.hostname_id}"
+#}
