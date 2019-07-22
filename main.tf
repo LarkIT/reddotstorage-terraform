@@ -33,7 +33,7 @@ module "vpc" {
 }
 
 module "security_groups" {
-  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.6"
+  source              = "git::https://github.com/LarkIT/security_groups.git?ref=v0.0.7"
   host_prefix         = "${var.host_prefix}"
   vpc_id              = "${module.vpc.vpc_id}"
   cidr                = "${module.vpc.cidr}"
