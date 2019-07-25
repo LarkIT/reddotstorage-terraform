@@ -213,6 +213,21 @@ module "foreman" {
   route53_internal_id  = "${module.dns.route53_internal_id}"
 }
 
+module "foreman-02" {
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=master"
+  role                 = "foreman"
+  hostname             = "foreman-02"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-shared}"
+  instance_type        = "t2.large"
+  bootstrap_template   = "foreman-install"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.foreman_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+}
+
 module "gitlab" {
   source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "gitlab"
