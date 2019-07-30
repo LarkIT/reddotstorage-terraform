@@ -214,7 +214,7 @@ module "foreman" {
 }
 
 module "foreman-02" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=DEVSUPPORT616"
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=master"
   role                 = "foreman"
   hostname             = "foreman-02"
   host_prefix          = "${module.vpc.host_prefix}"
