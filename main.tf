@@ -325,22 +325,6 @@ module "prod_railsapp_01" {
   enable_ebs_volume    = true
 }
 
-module "prod_railsapp_02" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
-  role                 = "railsapp"
-  hostname             = "prodapp-02"
-  host_prefix          = "${module.vpc.host_prefix}"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  region               = "${var.region}"
-  availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-app}"
-  instance_type        = "t2.medium"
-  iam_instance_profile = "prod_railsapp"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.prodapp_id}" ]
-  route53_internal_id  = "${module.dns.route53_internal_id}"
-  enable_ebs_volume    = true
-}
-
 module "prod_fusion_01" {
   source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
   role                 = "fusion"
