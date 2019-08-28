@@ -346,6 +346,43 @@ module "prod_fusion_01" {
 # Stage Database
 #
 ###############################
+
+resource "aws_rds_cluster_parameter_group" "red-postgres-cluster-pg" {
+  name   = "red-postgres-cluster-pg"
+  family = "aurora-postgresql9.6"
+
+  parameter {
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "pg_stat_statements.track"
+    value        = "all"
+    apply_method = "pending-reboot"
+
+  }
+}
+
+resource "aws_db_parameter_group" "red-postgres-pg" {
+  name   = "red-postgres-pg"
+  family = "aurora-postgresql9.6"
+
+  parameter {
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "pg_stat_statements.track"
+    value        = "all"
+    apply_method = "pending-reboot"
+
+  }
+}
+
 module "stage_db" {
   source                 = "git::https://github.com/terraform-aws-modules/terraform-aws-rds.git?ref=v1.0.3"
   identifier             = "stage"
