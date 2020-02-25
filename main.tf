@@ -304,6 +304,23 @@ module "stage_fusion_02" {
   enable_ebs_volume    = true
 }
 
+module "stage_fusion_03" {
+  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
+  role                 = "fusion"
+  pp_env               = "stage"
+  hostname             = "stagefusion-03"
+  host_prefix          = "${module.vpc.host_prefix}"
+  internal_domain_name = "${module.dns.internal_domain_name}"
+  region               = "${var.region}"
+  availability_zone    = "${module.vpc.availability_zone}"
+  subnet_id            = "${module.vpc.a-app}"
+  instance_type        = "t2.xlarge"
+  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.stage-fusion_id}" ]
+  route53_internal_id  = "${module.dns.route53_internal_id}"
+  enable_ebs_volume    = true
+  ebs_volume_size      = 40
+}
+
 ###############################
 #
 # Production Application Server
