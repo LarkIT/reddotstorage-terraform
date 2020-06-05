@@ -265,24 +265,6 @@ module "vpn" {
   route53_external_id  = "${module.dns.route53_external_id}"
 }
 
-module "vpn-02" {
-  source               = "git::https://github.com/LarkIT/aws_instance.git?ref=v0.0.3"
-  role                 = "vpn"
-  hostname             = "vpn-02"
-  host_prefix          = "${module.vpc.host_prefix}"
-  internal_domain_name = "${module.dns.internal_domain_name}"
-  external_dns_enable  = true
-  external_hostname    = "vpn2.aws.reddotstorage.com"
-  region               = "${var.region}"
-  availability_zone    = "${module.vpc.availability_zone}"
-  subnet_id            = "${module.vpc.a-dmz}"
-  enable_aws_eip       = true
-  instance_type        = "t2.micro"
-  security_groups      = [ "${module.security_groups.general_id}", "${module.security_groups.ssh_jump_id}", "${module.security_groups.vpn_id}" ]
-  route53_internal_id  = "${module.dns.route53_internal_id}"
-  route53_external_id  = "${module.dns.route53_external_id}"
-}
-
 ###############################
 #
 # Stage Application Server
